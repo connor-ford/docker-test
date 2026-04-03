@@ -22,17 +22,17 @@ pipeline {
             }
         }
 
-        stage('Build & Test') {
+        stage('Test & Build') {
             agent {
                 docker { image env.NODE_IMG }
             }
             steps {
-                sh 'npm test'
+                sh 'npm run test'
                 sh 'npm run build'
             }
             post {
                 always {
-                    archiveArtifacts artifacts: 'build/**', allowEmptyArchive: true
+                    archiveArtifacts artifacts: 'dist/**', allowEmptyArchive: true
                 }
             }
         }
@@ -40,8 +40,8 @@ pipeline {
         stage('Deployment Simulation') {
             steps {
                 sh "mkdir -p ${env.STAGING_DIR}"
-                sh "cp -r build/* ${env.STAGING_DIR}/"
-                echo "SUCCESS: Application deployed to simulated staging folder: ${env.STAGING_DIR}"
+                sh "cp -r dist/* ${env.STAGING_DIR}/"
+                echo "SUCCESS: Application deployed from dist/ to: ${env.STAGING_DIR}"
             }
         }
     }
