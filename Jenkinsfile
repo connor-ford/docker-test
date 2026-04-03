@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    environment {
+        STAGING_DIR = './mock_staging'
+        NODE_IMG = 'node:20-alpine'
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -8,20 +13,35 @@ pipeline {
             }
         }
 
-        stage('Build and Test') {
+        stage('Install Dependencies') {
             agent {
-                docker {
-                    image 'maven:3.9.9-eclipse-temurin-17'
-                    args '-u root:root'
-                }
+                docker { image env.NODE_IMG }
             }
             steps {
-                sh 'mvn clean test'
+                sh 'npm ci'
+            }
+        }
+
+        stage('Build & Test') {
+            agent {
+                docker { image env.NODE_IMG }
+            }
+            steps {
+                sh 'npm test -- --watchAll=false'
+                sh 'npm run build'
             }
             post {
                 always {
-                    archiveArtifacts artifacts: 'target/*.jar', allowEmptyArchive: true
+                    archiveArtifacts artifacts: 'build/**', allowEmptyArchive: true
                 }
+            }
+        }
+
+        stage('Deployment Simulation') {
+            steps {
+                sh "mkdir -p ${env.STAGING_DIR}"
+                sh "cp -r build/* ${env.STAGING_DIR}/"
+                echo "SUCCESS: Application deployed to simulated staging folder: ${env.STAGING_DIR}"
             }
         }
     }
