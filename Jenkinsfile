@@ -27,7 +27,7 @@ pipeline {
                 docker { image env.NODE_IMG }
             }
             steps {
-                sh 'npm test -- --watchAll=false'
+                sh 'npm test'
                 sh 'npm run build'
             }
             post {
